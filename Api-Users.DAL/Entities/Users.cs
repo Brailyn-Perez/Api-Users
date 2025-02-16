@@ -1,10 +1,12 @@
 ﻿
 using Api_Users.DAL.Core;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Api_Users.DAL.Entities
 {
+    [Index(nameof(Email), IsUnique = true)]
     public class Users : BaseEntity
     {
         [Key]

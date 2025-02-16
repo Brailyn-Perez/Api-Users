@@ -10,8 +10,8 @@ namespace Api_Users.DAL.Core
         }
         public bool IsDeleted { get; set; }
         public DateTime CreationDate { get; set; }
-        public DateTime DeleteDate { get; set; }
-        public DateTime UpdateDate { get; set; }
+        public DateTime? DeleteDate { get; set; }
+        public DateTime? UpdateDate { get; set; }
 
     }
 }

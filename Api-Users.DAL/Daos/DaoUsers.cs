@@ -27,27 +27,36 @@ namespace Api_Users.DAL.Daos
 
         public async Task CreateAsync(Users user)
         {
+           
             ValidationResult result = await validationRules.ValidateAsync(user);
 
             if (!result.IsValid)
             {
                 foreach (var error in result.Errors)
                 {
-                    _logger.LogError("Property " + error.PropertyName + " failed validation. Error was: " + error.ErrorMessage);
+                    _logger.LogError($"Property {error.PropertyName} failed validation. Error was: {error.ErrorMessage}");
                 }
+                return;
             }
-            else
+
+            try
             {
-                try
+               
+                bool emailExists = await _context.Users.AnyAsync(u => u.Email == user.Email);
+                if (emailExists)
                 {
-                    await _context.Users.AddAsync(user);
-                    await _context.SaveChangesAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex.Message);
+                    _logger.LogError($"El email {user.Email} ya está registrado.");
+                    throw new InvalidOperationException($"El email {user.Email} ya está registrado.");
                 }
 
+             
+                await _context.Users.AddAsync(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear el usuario.");
+                throw;
             }
         }
 
@@ -71,6 +80,7 @@ namespace Api_Users.DAL.Daos
                 {
                     var user = await GetByIdAsync(id);
                     user.IsDeleted = true;
+                    user.DeleteDate = DateTime.Now;
                     _context.Users.Update(user);
                     await _context.SaveChangesAsync();
                 }
@@ -85,7 +95,7 @@ namespace Api_Users.DAL.Daos
         {
             try
             {
-                return await _context.Users.ToListAsync();
+                return await _context.Users.Where(x => x.IsDeleted == false).ToListAsync();
             }
             catch (Exception ex)
             {
@@ -113,7 +123,7 @@ namespace Api_Users.DAL.Daos
             {
                 try
                 {
-                    return await _context.Users.FirstAsync(user => user.Id == id);
+                    return await _context.Users.Where(x => x.IsDeleted == false).FirstAsync(user => user.Id == id);
                 }
                 catch (Exception ex)
                 {
